@@ -64,32 +64,41 @@ public:
 
     int c0, c1;
 
+    HashFunctions() {
+        this->c0 = this->c1 = 1;
+    }
+
     HashFunctions(int c0, int c1) {
         this->c0 = c0;
         this->c1 = c1;
     }
 
     int g(int key) {
-        return ((c0 + c1 * key) % 1900813) % TABLE_SIZE;
+        return abs(((c0 + c1 * key) % 1900813) % TABLE_SIZE);
     }
 };
 
 int main() {
 //    generateData();
+    // Gets data from the input file.
     getData("/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/test/input1");
+////    Debugging purposes
 //    for (auto x: keys) {
 //        cout << x << ' ';
 //    }
+    int noOfBuckets = ceil(N / 409);
 
-    vector<vector<vector<pair<int, bool> > > > hashTable;
+    vector<vector<vector<int> > > hashTable;
     hashTable.resize(noOfBuckets);
+    // Sets up the Hash Tables
     for (int i = 0; i < noOfBuckets; ++i) {
         hashTable[i].resize(3);
         for (int j = 0; j < 3; ++j) {
-            hashTable[i][j].resize(TABLE_SIZE, {0, false});
+            hashTable[i][j].resize(TABLE_SIZE, -1);
         }
     }
-    int noOfBuckets = ceil(N / 409);
+
+    // Check that bucket size is not exceeded while assigning
     vector<int> bucket_size(noOfBuckets, 0);
     for (int i = 0; i < N; ++i) {
         bucket_size[getBucketNumber(keys[i], noOfBuckets)]++;
@@ -99,12 +108,71 @@ int main() {
         return 1;
     }
     HashFunctions f[3];
-    int rand_number = rand();
+    // Numbers to be XOR'ed with random number to get corresponding functions.
     int XOR_NUM[3][2] = {{69,     696},
                          {6969,   69696},
                          {696969, 6969696}};
-    for (int i = 0; i < 3; ++i) {
-        f[i]=HashFunctions(XOR_NUM[i][0]^rand_number,XOR_NUM[i][1]^rand_number);
+
+    omp_lock_t table_lock[noOfBuckets][3][TABLE_SIZE];
+#pragma omp parallel for
+    for (int i = 0; i < noOfBuckets; ++i) {
+#pragma omp parallel for
+        for (int j = 0; j < 3; ++j) {
+#pragma omp parallel for
+            for (int k = 0; k < TABLE_SIZE; ++k) {
+                omp_init_lock(&table_lock[i][j][k]);
+            }
+        }
     }
+
+    // Flag which tells if we need to change the hashing functions due to iterations>=25
+    bool flag_change_g = false;
+    srand(time(NULL));
+    do {
+        if (flag_change_g) {
+            cout << "Last hashing failed, retrying with new random number." << endl;
+        }
+
+        // Set up hashing functions
+        int rand_number = rand();   //Works well for 1804289383
+        for (int i = 0; i < 3; ++i) {
+            f[i] = HashFunctions(XOR_NUM[i][0] ^ rand_number, XOR_NUM[i][1] ^ rand_number);
+        }
+
+        cout << "Random number : " << rand_number << endl;
+        flag_change_g = false;
+
+#pragma omp parallel for
+        for (int i = 0; i < N; ++i) {
+            int bucketNumber = getBucketNumber(keys[i], noOfBuckets);
+            int g[3];
+
+            // Get the index in each Hash Table.
+            for (int j = 0; j < 3; ++j) {
+                g[j] = f[j].g(keys[i]);
+            }
+
+            int iterations = 0;
+
+            // Cuckoo Hash in action.
+            // Keep running until number is
+            while (iterations < 25) {
+                for (int j = 0; j < 3; ++j) {
+                    if (hashTable[bucketNumber][0][g[0]] != keys[i] && hashTable[bucketNumber][1][g[1]] != keys[i] &&
+                        hashTable[bucketNumber][2][g[2]] != keys[i]) {
+                        omp_set_lock(&table_lock[bucketNumber][j][g[j]]);
+                        hashTable[bucketNumber][j][g[j]] = keys[i];
+                        omp_unset_lock(&table_lock[bucketNumber][j][g[j]]);
+                    }
+#pragma omp barrier
+                    iterations++;
+                }
+            }
+            if (hashTable[bucketNumber][0][g[0]] != keys[i] && hashTable[bucketNumber][1][g[1]] != keys[i] && hashTable[bucketNumber][2][g[2]] != keys[i]) {
+#pragma omp critical
+                flag_change_g = true;
+            }
+        }
+    } while (flag_change_g);
     return 0;
 }
