@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/Parallel-Hashing-Implementation.dir/main.cpp.o"
+  "CMakeFiles/Parallel-Hashing-Implementation.dir/main2.cpp.o"
   "Parallel-Hashing-Implementation.pdb"
   "Parallel-Hashing-Implementation"
 )

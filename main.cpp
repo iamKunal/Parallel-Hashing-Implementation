@@ -9,7 +9,8 @@ using namespace std;
 
 
 #define N 1'00'000
-#define TABLE_SIZE 192
+//#define TABLE_SIZE 192
+int TABLE_SIZE = 192;
 
 template<class T>
 bool contains(const std::vector<T> &vec, const T &value) {
@@ -17,6 +18,7 @@ bool contains(const std::vector<T> &vec, const T &value) {
 }
 
 vector<unsigned int> keys;
+int h_number = 69;
 
 void generateData() {
     vector<unsigned int> keys;
@@ -57,8 +59,8 @@ void getData(string filename) {
 }
 
 unsigned int getBucketNumber(unsigned int key, unsigned int noOfBuckets) {
-    unsigned int c1 = 5;
-    unsigned int c0 = 7;
+    unsigned int c1 = 69696969 ^::h_number;
+    unsigned int c0 = 696969 ^::h_number;
     unsigned int prime = 1900813;
 
     c1 = 1;
@@ -86,11 +88,16 @@ public:
     }
 };
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc == 2) {
+        TABLE_SIZE = atoi(argv[1]);
+    }
     // Gets data from the input file.
-    getData("/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/test/input2"); // Contains 1'00'00'000 unique integers
-
-    unsigned int noOfBuckets = ceil(N / 409);
+//    getData("/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/test/input2"); // Contains 1'00'00'000 unique integers
+    for (int i = 0; i < N; ++i) {
+        keys.push_back(i);
+    }
+    unsigned int noOfBuckets = N / 409 + 1;
 
     vector<vector<vector<unsigned int> > > hashTable;
     hashTable.resize(noOfBuckets);
@@ -104,21 +111,26 @@ int main() {
             fill(hashTable[i][j].begin(), hashTable[i][j].end(), -1);
         }
     }
-
-    // Check that bucket size is not exceeded while assigning
     vector<unsigned int> bucket_size(noOfBuckets, 0);
+    srand(time(NULL));
+    h_number = rand();
+    // Check that bucket size is not exceeded while assigning
+    fill(bucket_size.begin(), bucket_size.end(), 0);
     for (unsigned int i = 0; i < N; ++i) {
         bucket_size[getBucketNumber(keys[i], noOfBuckets)]++;
     }
+
     if (*max_element(bucket_size.begin(), bucket_size.end()) > 512) {
         cout << "h() failed!" << endl;
         return 1;
     }
+    cout << "Max bucket size : " << *max_element(bucket_size.begin(), bucket_size.end()) << endl;
+    cout << "Min bucket size : " << *min_element(bucket_size.begin(), bucket_size.end()) << endl;
     HashFunctions f[3];
     // Numbers to be XOR'ed with random number to get corresponding functions.
     unsigned int XOR_NUM[3][2] = {{69,     696},
-                         {6969,   69696},
-                         {696969, 6969696}};
+                                  {6969,   69696},
+                                  {696969, 6969696}};
 
     omp_lock_t table_lock[noOfBuckets][3][TABLE_SIZE];
 #pragma omp parallel for

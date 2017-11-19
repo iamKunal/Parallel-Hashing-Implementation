@@ -150,6 +150,33 @@ main.cpp.s:
 	$(MAKE) -f CMakeFiles/Parallel-Hashing-Implementation.dir/build.make CMakeFiles/Parallel-Hashing-Implementation.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+main2.o: main2.cpp.o
+
+.PHONY : main2.o
+
+# target to build an object file
+main2.cpp.o:
+	$(MAKE) -f CMakeFiles/Parallel-Hashing-Implementation.dir/build.make CMakeFiles/Parallel-Hashing-Implementation.dir/main2.cpp.o
+.PHONY : main2.cpp.o
+
+main2.i: main2.cpp.i
+
+.PHONY : main2.i
+
+# target to preprocess a source file
+main2.cpp.i:
+	$(MAKE) -f CMakeFiles/Parallel-Hashing-Implementation.dir/build.make CMakeFiles/Parallel-Hashing-Implementation.dir/main2.cpp.i
+.PHONY : main2.cpp.i
+
+main2.s: main2.cpp.s
+
+.PHONY : main2.s
+
+# target to generate assembly for a file
+main2.cpp.s:
+	$(MAKE) -f CMakeFiles/Parallel-Hashing-Implementation.dir/build.make CMakeFiles/Parallel-Hashing-Implementation.dir/main2.cpp.s
+.PHONY : main2.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -162,6 +189,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... main2.o"
+	@echo "... main2.i"
+	@echo "... main2.s"
 .PHONY : help
 
 

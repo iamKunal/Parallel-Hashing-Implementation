@@ -87,6 +87,9 @@
 		<Unit filename="/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/main.cpp">
 			<Option target="Parallel-Hashing-Implementation"/>
 		</Unit>
+		<Unit filename="/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/main2.cpp">
+			<Option target="Parallel-Hashing-Implementation"/>
+		</Unit>
 		<Unit filename="/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
