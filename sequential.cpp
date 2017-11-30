@@ -3,12 +3,12 @@
 //
 
 #include <bits/stdc++.h>
-#include <omp.h>
+//#include <omp.h>
 
 using namespace std;
 
 
-#define N 1'00'000
+int N = 1'00'000;
 //#define TABLE_SIZE 192
 int TABLE_SIZE = 192;
 
@@ -89,8 +89,9 @@ public:
 };
 
 int main(int argc, char **argv) {
-    if (argc == 2) {
-        TABLE_SIZE = atoi(argv[1]);
+    if (argc == 3) {
+        N = atoi(argv[1]);
+        TABLE_SIZE = atoi(argv[2]);
     }
     // Gets data from the input file.
 //    getData("/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/test/input2"); // Contains 1'00'00'000 unique integers
@@ -132,17 +133,17 @@ int main(int argc, char **argv) {
                                   {6969,   69696},
                                   {696969, 6969696}};
 
-    omp_lock_t table_lock[noOfBuckets][3][TABLE_SIZE];
-#pragma omp parallel for
-    for (unsigned int i = 0; i < noOfBuckets; ++i) {
-#pragma omp parallel for
-        for (unsigned int j = 0; j < 3; ++j) {
-#pragma omp parallel for
-            for (unsigned int k = 0; k < TABLE_SIZE; ++k) {
-                omp_init_lock(&table_lock[i][j][k]);
-            }
-        }
-    }
+//    omp_lock_t table_lock[noOfBuckets][3][TABLE_SIZE];
+//#pragma omp parallel for
+//    for (unsigned int i = 0; i < noOfBuckets; ++i) {
+//#pragma omp parallel for
+//        for (unsigned int j = 0; j < 3; ++j) {
+//#pragma omp parallel for
+//            for (unsigned int k = 0; k < TABLE_SIZE; ++k) {
+//                omp_init_lock(&table_lock[i][j][k]);
+//            }
+//        }
+//    }
 
     // Flag which tells if we need to change the hashing functions due to iterations>=25
     bool flag_change_g = false;
@@ -154,9 +155,9 @@ int main(int argc, char **argv) {
         if (flag_change_g) {
             cout << "Number of keys left out : " << left_out << endl;
             cout << "Last hashing failed, retrying with new random number." << endl;
-#pragma omp parallel for
+//#pragma omp parallel for
             for (unsigned int i = 0; i < noOfBuckets; ++i) {
-#pragma omp parallel for
+//#pragma omp parallel for
                 for (unsigned int j = 0; j < 3; ++j) {
                     fill(hashTable[i][j].begin(), hashTable[i][j].end(), -1);
                 }
@@ -174,11 +175,11 @@ int main(int argc, char **argv) {
         flag_change_g = false;
         left_out = 0;
         iterations = 0;
-
+        double start = clock();
         // Cuckoo Hash in action.
         // Keep running until number is saved in the table or infinite loop (iterations>25) is reached
         while (iterations < 25) {
-#pragma omp parallel for
+//#pragma omp parallel for
             for (unsigned int i = 0; i < N; ++i) {
                 unsigned int bucketNumber = getBucketNumber(keys[i], noOfBuckets);
                 unsigned int tableNumber = iterations % 3;
@@ -190,15 +191,17 @@ int main(int argc, char **argv) {
                 }
                 if (hashTable[bucketNumber][0][g[0]] != keys[i] && hashTable[bucketNumber][1][g[1]] != keys[i] &&
                     hashTable[bucketNumber][2][g[2]] != keys[i]) {
-                    omp_set_lock(&table_lock[bucketNumber][tableNumber][g[tableNumber]]);
+//                    omp_set_lock(&table_lock[bucketNumber][tableNumber][g[tableNumber]]);
                     hashTable[bucketNumber][tableNumber][g[tableNumber]] = keys[i];
-                    omp_unset_lock(&table_lock[bucketNumber][tableNumber][g[tableNumber]]);
+//                    omp_unset_lock(&table_lock[bucketNumber][tableNumber][g[tableNumber]]);
                 }
             }
             iterations++;
         }
+
+        cout << "Current Time : " << (clock() - start) / CLOCKS_PER_SEC << endl;
         // This part checks whether any of the keys are left out, if yes then regenerate the hashing functions.
-#pragma omp parallel for
+//#pragma omp parallel for
         for (unsigned int i = 0; i < N; ++i) {
             unsigned int bucketNumber = getBucketNumber(keys[i], noOfBuckets);
             unsigned int g[3];
@@ -209,7 +212,7 @@ int main(int argc, char **argv) {
             }
             if (hashTable[bucketNumber][0][g[0]] != keys[i] && hashTable[bucketNumber][1][g[1]] != keys[i] &&
                 hashTable[bucketNumber][2][g[2]] != keys[i]) {
-#pragma omp critical
+//#pragma omp critical
                 {
                     // Count of left out keys
                     left_out++;
@@ -218,7 +221,9 @@ int main(int argc, char **argv) {
             }
         }
         number++;
-        if (number > 20){
+        if (!flag_change_g)
+            cout << "Hashed Successfully!" << endl;
+        if (number >= 100) {
             break;
         }
     } while (flag_change_g);

@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++14 -fopenmp -g   CMakeFiles/Parallel-Hashing-Implementation.dir/main.cpp.o CMakeFiles/Parallel-Hashing-Implementation.dir/main2.cpp.o  -o Parallel-Hashing-Implementation 

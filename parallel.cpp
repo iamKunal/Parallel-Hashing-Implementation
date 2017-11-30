@@ -8,7 +8,7 @@
 using namespace std;
 
 
-#define N 1'00'000
+int N = 1'00'000;
 //#define TABLE_SIZE 192
 int TABLE_SIZE = 192;
 
@@ -89,8 +89,9 @@ public:
 };
 
 int main(int argc, char **argv) {
-    if (argc == 2) {
-        TABLE_SIZE = atoi(argv[1]);
+    if (argc == 3) {
+        N = atoi(argv[1]);
+        TABLE_SIZE = atoi(argv[2]);
     }
     // Gets data from the input file.
 //    getData("/home/kunal/Documents/GITPRO/Parallel-Hashing-Implementation/test/input2"); // Contains 1'00'00'000 unique integers
@@ -174,7 +175,7 @@ int main(int argc, char **argv) {
         flag_change_g = false;
         left_out = 0;
         iterations = 0;
-
+        double start = omp_get_wtime();
         // Cuckoo Hash in action.
         // Keep running until number is saved in the table or infinite loop (iterations>25) is reached
         while (iterations < 25) {
@@ -197,6 +198,7 @@ int main(int argc, char **argv) {
             }
             iterations++;
         }
+        cout << "Current Time : " << omp_get_wtime() - start << endl;
         // This part checks whether any of the keys are left out, if yes then regenerate the hashing functions.
 #pragma omp parallel for
         for (unsigned int i = 0; i < N; ++i) {
@@ -218,9 +220,11 @@ int main(int argc, char **argv) {
             }
         }
         number++;
-        if (number > 20){
+        if(!flag_change_g)
+            cout<<"Hashed Successfully!"<<endl;
+        if (number >= 100){
             break;
         }
-    } while (flag_change_g);
+    } while (1);
     return 0;
 }
